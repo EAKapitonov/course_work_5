@@ -104,6 +104,6 @@ class HeadHunter(AbsHeadHunter):
         with psycopg2.connect(host="localhost", database="headhunter", user="postgres", password=password_bd) as conn:
             with conn.cursor() as cur:
                 i = self.employer
-                cur.execute("INSERT INTO customers_name VALUES (%s, %s, %s, %s, %s, %s)",
+                cur.execute("INSERT INTO customers_name VALUES (%s, %s, %s, %s)",
                             (i['employer_id'], i["name"], i['url'], i['description']))
         conn.close()
