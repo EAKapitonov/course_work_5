@@ -23,12 +23,6 @@ class AbsHeadHunter(ABC):
         """
         pass
 
-    @abstractmethod
-    def response_format(self):
-        """
-        Форматирования ответа сервера
-        """
-        pass
 
     @abstractmethod
     def get_to_vacancy(self):

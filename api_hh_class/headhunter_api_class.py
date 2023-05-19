@@ -36,7 +36,7 @@ class HeadHunter(AbsHeadHunter):
             req = requests.get("https://api.hh.ru/employers", param)  # Посылаем запрос к API
             data = req.content.decode()  # декодируем ответ чтобы Кириллица отображалось корректно
             data_dict = json.loads(data)
-            self.employer_id = "Написать"
+            self.employer_id = data_dict["id"]
         except ValueError:
             print("Ошибка значения, попробуйте снова")
             sys.exit()
@@ -47,49 +47,43 @@ class HeadHunter(AbsHeadHunter):
         """
         req = requests.get(f"https://api.hh.ru/employers/{self.employer_id}")  # Посылаем запрос к API
         data = req.content.decode()  # декодируем ответ чтобы Кириллица отображалось корректно
-        self.employer = json.loads(data)
+        data_dict = json.loads(data)
+        employer = {}
+        employer['employer_id'] = self.employer_id
+        employer['name'] = data_dict['name']
+        employer['url'] = data_dict['alternate_url']
+        employer['description'] = data_dict['description']
+        self.employer = employer
 
     def import_vacancy_employer_from_api(self):
         """
         Получает данные с вакансиями по employer_id
         """
-        param_ = {'employer_id': employer_id,  # Идентификатор работодателя. Можно указать несколько значений
-                  'page': page,  # Номер страницы с работодателями (считается от 0, по умолчанию — 0)
-                  'per_page': 1  # Количество элементов на страницу (по умолчанию — 20, максимум — 100 )
+        param_ = {'employer_id': self.employer_id,  # Идентификатор работодателя. Можно указать несколько значений
+                  'page': 1,  # Номер страницы с работодателями (считается от 0, по умолчанию — 0)
+                  'per_page': 100  # Количество элементов на страницу (по умолчанию — 20, максимум — 100 )
                   }
         req = requests.get("https://api.hh.ru/vacancies", param_)  # Посылаем запрос к API
         data = req.content.decode()  # декодируем ответ чтобы Кириллица отображалось корректно
-        vac = json.loads(data)
-        self.employer_vacancy.append(vac['items'])
-
-
-    def response_format(self):
-        """
-        Форматирования ответа сервера
-        """
-        for i in range(0, len(self.employer_vacancy)):
+        vacancy = json.loads(data)
+        for i in range(0, len(vacancy)):
             items = {}
-            items["name"] = self.employer_vacancy[i]["name"]
-            items["url"] = self.employer_vacancy[i]["alternate_url"]
-            if isinstance(self.employer_vacancy[i]["salary"], dict):
-                if isinstance(self.employer_vacancy[i]["salary"]["from"], int):
-                    items["salary"] = self.employer_vacancy[i]["salary"]["from"]
+            items["employer_id"] = self.employer_id
+            items["name"] = vacancy[i]["name"]
+            items["url"] = vacancy[i]["alternate_url"]
+            if isinstance(vacancy[i]["salary"], dict):
+                if isinstance(vacancy[i]["salary"]["from"], int):
+                    items["salary"] = vacancy[i]["salary"]["from"]
                 else:
                     items["salary"] = 0
             else:
                 continue
-            items["id_vacancy"] = self.employer_vacancy[i]["id"]
-            if "employer" in self.employer_vacancy[i]:
-                items["employer"] = self.employer_vacancy[i]["employer"]["name"]  # сохранение имени работодателя
-                items["employer_url"] = self.employer_vacancy[i]["employer"][
-                    "alternate_url"]  # сохранение ссылки на карточку работодателя
-            else:
-                items["employer"] = "нет данных"  # сохранение имени работодателя
-                items["employer_url"] = "нет данных"  # сохранение ссылки на карточку работодателя
-            items["requirement"] = self.employer_vacancy[i]['snippet']['requirement']  # сохранение требований к вакансии
-            items["responsibility"] = self.employer_vacancy[i]['snippet'][
+            items["id_vacancy"] = vacancy[i]["id"]
+            items["requirement"] = vacancy[i]['snippet'][
+                'requirement']  # сохранение требований к вакансии
+            items["responsibility"] = vacancy[i]['snippet'][
                 'responsibility']  # сохранение обязанностей вакансии
-            self.data_from_vacancy.append(items)
+            self.employer_vacancy.append(items)
 
     def get_to_vacancy(self):
         """
@@ -97,9 +91,10 @@ class HeadHunter(AbsHeadHunter):
         """
         with psycopg2.connect(host="localhost", database="headhunter", user="postgres", password=password_bd) as conn:
             with conn.cursor() as cur:
-                for i in reader:
-                    cur.execute("INSERT INTO customers_name VALUES (%s, %s, %s, %s, %s, %s)",
-                                (i["customer_id"], i["company_name"], i["contact_name"]))
+                for i in self.employer_vacancy:
+                    cur.execute("INSERT INTO customers_name VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                                (i["employer_id"], i["name"], i["url"], i["salary"], i["id_vacancy"], i["requirement"],
+                                 i["responsibility"]))
         conn.close()
 
     def get_to_employer(self):
@@ -108,7 +103,7 @@ class HeadHunter(AbsHeadHunter):
         """
         with psycopg2.connect(host="localhost", database="headhunter", user="postgres", password=password_bd) as conn:
             with conn.cursor() as cur:
-                for i in reader:
-                    cur.execute("INSERT INTO customers_name VALUES (%s, %s, %s, %s, %s, %s)",
-                                (i["customer_id"], i["company_name"], i["contact_name"]))
+                i = self.employer
+                cur.execute("INSERT INTO customers_name VALUES (%s, %s, %s, %s, %s, %s)",
+                            (i['employer_id'], i["name"], i['url'], i['description']))
         conn.close()
