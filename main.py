@@ -1,16 +1,9 @@
-# This is a sample Python script.
+from api_hh_class.headhunter_api_class import HeadHunter
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+hh = HeadHunter('Tigers Realm Coal')
+hh.research_employer_from_api()
+print(1)
+hh.import_information_about_employer()
+hh.import_vacancy_employer_from_api()
+hh.get_to_employer()
+hh.get_to_vacancy()
