@@ -30,13 +30,13 @@ class HeadHunter(AbsHeadHunter):
         try:
             param = {'text': self.name,
                      'parent_id': self.parent_area_employer,  # Код страны.
-                     'page': 1,  # Номер страницы с работодателями (считается от 0, по умолчанию — 0)
+                     'page': 0,  # Номер страницы с работодателями (считается от 0, по умолчанию — 0)
                      'per_page': 1  # Количество элементов на страницу (по умолчанию — 20, максимум — 100 )
                      }
             req = requests.get("https://api.hh.ru/employers", param)  # Посылаем запрос к API
             data = req.content.decode()  # декодируем ответ чтобы Кириллица отображалось корректно
             data_dict = json.loads(data)
-            self.employer_id = data_dict["id"]
+            self.employer_id = data_dict['items'][0]["id"]
         except ValueError:
             print("Ошибка значения, попробуйте снова")
             sys.exit()
@@ -60,7 +60,7 @@ class HeadHunter(AbsHeadHunter):
         Получает данные с вакансиями по employer_id
         """
         param_ = {'employer_id': self.employer_id,  # Идентификатор работодателя. Можно указать несколько значений
-                  'page': 1,  # Номер страницы с работодателями (считается от 0, по умолчанию — 0)
+                  'page': 0,  # Номер страницы с работодателями (считается от 0, по умолчанию — 0)
                   'per_page': 100  # Количество элементов на страницу (по умолчанию — 20, максимум — 100 )
                   }
         req = requests.get("https://api.hh.ru/vacancies", param_)  # Посылаем запрос к API
@@ -69,19 +69,19 @@ class HeadHunter(AbsHeadHunter):
         for i in range(0, len(vacancy)):
             items = {}
             items["employer_id"] = self.employer_id
-            items["name"] = vacancy[i]["name"]
-            items["url"] = vacancy[i]["alternate_url"]
-            if isinstance(vacancy[i]["salary"], dict):
-                if isinstance(vacancy[i]["salary"]["from"], int):
-                    items["salary"] = vacancy[i]["salary"]["from"]
+            items["name"] = vacancy['items'][i]["name"]
+            items["url"] = vacancy['items'][i]["alternate_url"]
+            if isinstance(vacancy['items'][i]["salary"], dict):
+                if isinstance(vacancy['items'][i]["salary"]["from"], int):
+                    items["salary"] = vacancy['items'][i]["salary"]["from"]
                 else:
                     items["salary"] = 0
             else:
                 continue
-            items["id_vacancy"] = vacancy[i]["id"]
-            items["requirement"] = vacancy[i]['snippet'][
+            items["id_vacancy"] = vacancy['items'][i]["id"]
+            items["requirement"] = vacancy['items'][i]['snippet'][
                 'requirement']  # сохранение требований к вакансии
-            items["responsibility"] = vacancy[i]['snippet'][
+            items["responsibility"] = vacancy['items'][i]['snippet'][
                 'responsibility']  # сохранение обязанностей вакансии
             self.employer_vacancy.append(items)
 
@@ -92,8 +92,8 @@ class HeadHunter(AbsHeadHunter):
         with psycopg2.connect(host="localhost", database="headhunter", user="postgres", password=password_bd) as conn:
             with conn.cursor() as cur:
                 for i in self.employer_vacancy:
-                    cur.execute("INSERT INTO customers_name VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                                (i["employer_id"], i["name"], i["url"], i["salary"], i["id_vacancy"], i["requirement"],
+                    cur.execute("INSERT INTO vacancies VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                                (i["employer_id"], i["id_vacancy"], i["name"], i["url"], i["salary"], i["requirement"],
                                  i["responsibility"]))
         conn.close()
 
@@ -104,6 +104,6 @@ class HeadHunter(AbsHeadHunter):
         with psycopg2.connect(host="localhost", database="headhunter", user="postgres", password=password_bd) as conn:
             with conn.cursor() as cur:
                 i = self.employer
-                cur.execute("INSERT INTO customers_name VALUES (%s, %s, %s, %s)",
+                cur.execute("INSERT INTO employers VALUES (%s, %s, %s, %s)",
                             (i['employer_id'], i["name"], i['url'], i['description']))
         conn.close()
