@@ -6,6 +6,11 @@ class DBManager(AbsDBManager):
         """Получает список всех компаний и количество вакансий у каждой компании"""
         pass
 
+    SELECT employer_name, COUNT(vacancies.employer_id) FROM employers
+    INNER JOIN vacancies USING(employer_id)
+    GROUP BY employer_name
+    ORDER BY COUNT(*) DESC
+
     def get_all_vacancies(self):
         """Получает список всех вакансий с указанием названия компании, названия вакансии и зарплаты и ссылки на
         вакансию """

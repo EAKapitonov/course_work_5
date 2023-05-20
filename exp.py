@@ -35,4 +35,4 @@ param_ = {'employer_id': employer_id,  # Идентификатор работо
 req = requests.get("https://api.hh.ru/vacancies", param_)  # Посылаем запрос к API
 data = req.content.decode()  # декодируем ответ чтобы Кириллица отображалось корректно
 vac = json.loads(data)
-print(vac)
+print(len(vac['items']))

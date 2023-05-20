@@ -2,6 +2,7 @@ from api_hh_class.headhunter_api_class import HeadHunter
 
 
 """ Код создает объекты класса HeadHunter, импортирует данные с API и сохраняет в базу данных"""
+
 list_firm = ["Московский университет имени С.Ю.Витте",
              "Санкт-Петербургский государственный электротехнический университет “ЛЭТИ” им. В.И. Ульянова (Ленина)",
              "Научно-Технологический Университет «Сириус",
@@ -19,4 +20,3 @@ for x in range(0, len(list_firm)):
     i.import_vacancy_employer_from_api()
     i.get_to_employer()
     i.get_to_vacancy()
-
