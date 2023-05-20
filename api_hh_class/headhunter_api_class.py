@@ -23,6 +23,35 @@ class HeadHunter(AbsHeadHunter):
         self.employer = {}
         self.employer_vacancy = []
 
+    @classmethod
+    def great_database(cls):
+        """
+        Создает базу данных с нужными таблицами
+        """
+        conn = psycopg2.connect(dbname="postgres", user="postgres", password=password_bd, host="localhost")
+        cursor = conn.cursor()
+        conn.autocommit = True
+        sql = "CREATE DATABASE headhunter"
+        cursor.execute(sql)
+        cursor.close()
+        conn.close()
+        with psycopg2.connect(host="localhost", database="headhunter", user="postgres", password=password_bd) as conn:
+            with conn.cursor() as cur:
+                cur.execute("""CREATE TABLE employers(employer_id varchar PRIMARY KEY,
+                employer_name varchar,
+                url varchar,
+                description varchar);
+                CREATE TABLE vacancies(employer_id varchar,
+                id_vacancy varchar PRIMARY KEY,
+                vacancies_name varchar,
+                vacancies_url varchar,
+                salary int,
+                requirement text,
+                responsibility text);
+                ALTER TABLE vacancies ADD CONSTRAINT fk_vacancies_employer_id FOREIGN KEY(employer_id) REFERENCES employers(employer_id);""")
+        conn.close()
+
+
     def research_employer_from_api(self):
         """
         Метод получения данных через API по указанным параметрам
