@@ -58,6 +58,3 @@ class DBManager(AbsDBManager):
                 rows = cur.fetchall()
         conn.close()
         return rows
-
-i = DBManager()
-i.get_avg_salary()
