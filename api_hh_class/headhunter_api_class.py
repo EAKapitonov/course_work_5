@@ -61,12 +61,12 @@ class HeadHunter(AbsHeadHunter):
         """
         param_ = {'employer_id': self.employer_id,  # Идентификатор работодателя. Можно указать несколько значений
                   'page': 0,  # Номер страницы с работодателями (считается от 0, по умолчанию — 0)
-                  'per_page': 100  # Количество элементов на страницу (по умолчанию — 20, максимум — 100 )
+                  'per_page': 99  # Количество элементов на страницу (по умолчанию — 20, максимум — 100 )
                   }
         req = requests.get("https://api.hh.ru/vacancies", param_)  # Посылаем запрос к API
         data = req.content.decode()  # декодируем ответ чтобы Кириллица отображалось корректно
         vacancy = json.loads(data)
-        for i in range(0, len(vacancy)):
+        for i in range(0, len(vacancy['items'])):
             items = {}
             items["employer_id"] = self.employer_id
             items["name"] = vacancy['items'][i]["name"]
